@@ -1,4 +1,4 @@
-This is forked from openvpn-uild with adding latest Tunnelblick Xor patch
+This is forked from openvpn-build with adding latest Tunnelblick Xor patch
 
 #####################################################
 
