@@ -1,3 +1,7 @@
+This is forked from openvpn-uild with adding latest Tunnelblick Xor patch
+
+#####################################################
+
 OpenVPN project buildsystems
 #####################################################
 .. image:: https://github.com/OpenVPN/openvpn-build/actions/workflows/build.yaml/badge.svg
