@@ -14,9 +14,18 @@
                 "OpenVPN/easy-rsa"
             ],
             "extractVersion": "^v(?<version>.*)$"
+        },
+        {
+            "matchDepTypes": [
+                "action"
+            ],
+            "groupName": "github actions",
+            "extends": [
+                "schedule:weekly"
+            ]
         }
     ],
-    "regexManagers": [
+    "customManagers": [
         {
             "customType": "regex",
             "fileMatch": [
