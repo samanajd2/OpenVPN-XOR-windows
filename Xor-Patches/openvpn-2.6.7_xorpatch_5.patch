@@ -1,6 +1,6 @@
-diff -u -r -x .DS_Store openvpn-2.6.2.old/src/openvpn/socket.h openvpn-2.6.2.new/src/openvpn/socket.h
---- openvpn-2.6.2.old/src/openvpn/socket.h	2023-04-24 13:02:02.000000000 -0400
-+++ openvpn-2.6.2.new/src/openvpn/socket.h	2023-04-24 13:02:02.000000000 -0400
+diff -u -r -x .DS_Store openvpn-2.6.7.old/src/openvpn/socket.h openvpn-2.6.7.new/src/openvpn/socket.h
+--- openvpn-2.6.7.old/src/openvpn/socket.h	2023-11-11 13:02:02.000000000 -0400
++++ openvpn-2.6.7.new/src/openvpn/socket.h	2023-11-11 13:02:02.000000000 -0400
 @@ -246,6 +246,10 @@
  #endif
  };
