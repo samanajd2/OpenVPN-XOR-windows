@@ -10,9 +10,9 @@ Subject: [PATCH] Restore functionality of route-gateway's dhcp parameter, and
  src/openvpn/route.h |  3 +++
  3 files changed, 34 insertions(+), 2 deletions(-)
 
-diff -u -r -x .DS_Store openvpn-2.6.7.old/src/openvpn/init.c openvpn-2.6.7.new/src/openvpn/init.c
+diff -u -r -x .DS_Store openvpn-2.6.8.old/src/openvpn/init.c openvpn-2.6.8.new/src/openvpn/init.c
 --- openvpn-2.6.7.old/src/openvpn/init.c	2023-11-11 12:04:23.000000000 -0400
-+++ openvpn-2.6.7.new/src/openvpn/init.c	2023-11-11 12:04:23.000000000 -0400
++++ openvpn-2.6.8.new/src/openvpn/init.c	2023-11-18 12:04:23.000000000 -0400
 @@ -1530,6 +1530,7 @@
      if (init_route_list(route_list,
                          options->routes,
