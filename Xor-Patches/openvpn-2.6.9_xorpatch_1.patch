@@ -1,6 +1,6 @@
-diff -u -r -x .DS_Store openvpn-2.6.8.old/src/openvpn/forward.c openvpn-2.6.8.new/src/openvpn/forward.c
---- openvpn-2.6.8.old/src/openvpn/forward.c	2023-11-18 12:09:13.000000000 -0400
-+++ openvpn-2.6.8.new/src/openvpn/forward.c	2023-11-18 12:09:13.000000000 -0400
+diff -u -r -x .DS_Store openvpn-2.6.4.old/src/openvpn/forward.c openvpn-2.6.4.new/src/openvpn/forward.c
+--- openvpn-2.6.8.old/src/openvpn/forward.c	2023-06-03 12:09:13.000000000 -0400
++++ openvpn-2.6.9.new/src/openvpn/forward.c	2023-06-03 12:09:13.000000000 -0400
 @@ -928,7 +928,10 @@
  
      status = link_socket_read(c->c2.link_socket,
