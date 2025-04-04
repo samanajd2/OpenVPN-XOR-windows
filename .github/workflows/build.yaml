@@ -17,6 +17,11 @@ jobs:
     env:
       CMAKE: cmake.exe
       WIX: ${{ github.workspace }}\wix\
+      JsignJar: ${{ github.workspace }}\jsign.jar
+      SigningStoreType: GOOGLECLOUD
+      SigningKeyStore: ${{ secrets.GOOGLE_CLOUD_KMS_KEYRING }}
+      SigningStoreKeyName: ${{ secrets.GOOGLE_CLOUD_KMS_KEY }}
+      SigningCertificateFile: ${{ github.workspace }}/certificate.pem
 
     name: 'openvpn-build'
     runs-on: windows-latest
@@ -35,13 +40,25 @@ jobs:
           vcpkgJsonGlob: '**/src/openvpn/contrib/vcpkg-manifests/windows/vcpkg.json'
 
       - name: Get latest CMake and ninja
-        uses: lukka/get-cmake@8567b9d9b63052b8430ef30042e13c3ba5288f16 # v3.31.3
+        uses: lukka/get-cmake@56d043d188c3612951d8755da8f4b709ec951ad6 # v3.31.6
 
       - name: Install rst2html
         run: python -m pip install --upgrade pip docutils
 
       - name: Setup MSVC prompt
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+
+      - name: Set up Java
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        if: ${{ env.SigningKeyStore != '' }}
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      - name: Download Jsign
+        if: ${{ env.SigningKeyStore != '' }}
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/ebourg/jsign/releases/download/6.0/jsign-6.0.jar" -OutFile jsign.jar
 
       - name: Install Wix 3.14.1
         run: |
@@ -59,8 +76,29 @@ jobs:
           $version_m4 -replace '^define\(\[PRODUCT_CODE\], \[\{(?<ProductCode>.*)\}]\)', "define([PRODUCT_CODE], [{${NewProductCode}}])" `
             -replace '^define\(\[PRODUCT_VERSION\], \[(.*?)\]\)', "define([PRODUCT_VERSION], [${NewProductVersion}])" | Out-File -Encoding ASCII version.m4
 
+      - name: Authenticate to Google Cloud
+        id: 'auth'
+        uses: 'google-github-actions/auth@6fc4af4b145ae7821d527454aa9bd537d1f2dc5f' # v2
+        if: ${{ env.SigningKeyStore != '' }}
+        with:
+          create_credentials_file: false
+          token_format: 'access_token'
+          workload_identity_provider: ${{ secrets.GOOGLE_CLOUD_WIP }}
+          service_account: ${{ secrets.GOOGLE_CLOUD_SERVICE_ACCOUNT }}
+          access_token_lifetime: '600s'
+
+      - name: Build and Sign
+        working-directory: windows-msi
+        env:
+           SigningStorePass: ${{ steps.auth.outputs.access_token }}
+        if: ${{ env.SigningKeyStore != '' }}
+        run: |
+          echo "${{ secrets.SIGNING_CERTIFICATE }}" >${{ github.workspace }}/certificate.pem
+          ./build-and-package.ps1 -sign -arch ${{ matrix.arch }}
+
       - name: Build
         working-directory: windows-msi
+        if: ${{ env.SigningKeyStore == '' }}
         run: |
           ./build-and-package.ps1 -arch ${{ matrix.arch }}
 
@@ -76,7 +114,7 @@ jobs:
           echo "DATETIME=${dt}" >> $Env:GITHUB_ENV
 
       - name: Archive artifacts
-        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: openvpn-master-${{ env.DATETIME }}-${{ env.OPENVPN_COMMIT }}-${{ matrix.arch }}
           path: ${{ github.workspace }}\windows-msi\image\*-${{ matrix.arch }}.msi
@@ -84,18 +122,15 @@ jobs:
   run_tclient_tests:
     name: Run t_client tests on AWS
     needs: msvc
-    concurrency: aws_tclient_tests
-    runs-on: ubuntu-24.04
+    runs-on: msitest
     if: ${{ github.repository == 'openvpn/openvpn-build' && github.event_name != 'pull_request' }}
     env:
       AWS_REGION : "eu-west-1"
 
     steps:
       - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
         with:
-          role-to-assume: arn:aws:iam::217307881341:role/GitHubActions
-          role-session-name: githubactions
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Clone openvpn-windows-test repo
@@ -111,8 +146,12 @@ jobs:
           key: ${{ secrets.SSH_KEY_FOR_TCLIENT_HOST }}
           known_hosts: unnecessary
 
+      - name: Cleanup old artifacts
+        run:
+          rm -fr msi
+
       - name: Get artifacts
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
           pattern: "*-amd64"
           path: msi
@@ -126,7 +165,7 @@ jobs:
           .\Start-AWSTest.ps1 -SSH_KEY ~/.ssh/id_rsa -MSI_PATH $(Get-ChildItem ../msi/*-amd64/*.msi | select -ExpandProperty FullName)
 
       - name: Archive openvpn logs
-        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: ${{ always() }}
         with:
           name: t_client_openvpn_logs
@@ -143,7 +182,7 @@ jobs:
         run: sudo apt install knockd
 
       - name: Get artifacts
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
           path: msi
 
@@ -213,7 +252,7 @@ jobs:
 
       - name: Restore cached chroots
         id: chroots-restore
-        uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: |
             debian-sbuild/chroots
@@ -236,7 +275,7 @@ jobs:
       - name: Save chroots
         if: steps.chroots-restore.outputs.cache-hit != 'true'
         id: chroots-save
-        uses: actions/cache/save@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: |
             debian-sbuild/chroots
@@ -256,7 +295,7 @@ jobs:
           sg sbuild ./scripts/build-all.sh
 
       - name: Archive packages
-        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: openvpn-debian
           path: |
