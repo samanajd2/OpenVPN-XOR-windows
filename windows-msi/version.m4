@@ -10,19 +10,13 @@ define([PRODUCT_TAP_WIN_INSTALLER_VERSION], [I0])
 define([PRODUCT_TAP_WIN_COMPONENT_ID],      [tap0901])
 define([PRODUCT_TAP_WIN_NAME],              [TAP-Windows])
 
-dnl Wintun binaries
-define([PRODUCT_WINTUN_URL_x86],       [https://build.openvpn.net/downloads/releases/wintun-x86-0.8.1.msm])
-define([PRODUCT_WINTUN_URL_amd64],     [https://build.openvpn.net/downloads/releases/wintun-amd64-0.8.1.msm])
-dnl This is only to make build script happy - the file is only downloaded but not used, since there is no arm64 wintun MSM (yet)
-define([PRODUCT_WINTUN_URL_arm64],     [https://build.openvpn.net/downloads/releases/wintun-amd64-0.8.1.msm])
-
 dnl ovpn-dco binaries
 dnl renovate: datasource=github-releases depName=OpenVPN/ovpn-dco-win
 define([PRODUCT_OVPN_DCO_VERSION],     [2.5.6])
 
 dnl OpenVPNServ2.exe binary
-dnl renovate: datasource=github-releases depName=OpenVPN/openvpnserv2
-define([OVPNSERV2_VERSION], [1.4.0.1])
+dnl renovate: datasource=github-releases depName=OpenVPN/openvpnserv2 versioning=loose
+define([OVPNSERV2_VERSION], [2.0.0.0])
 
 dnl Easy-RSA binaries:
 dnl URL to .zip file containing "easy-rsa-[EASYRSA_VERSION]" folder with Easy-RSA.
@@ -42,7 +36,7 @@ define([PRODUCT_NAME],      [OpenVPN])
 define([PRODUCT_PUBLISHER], [OpenVPN, Inc.])
 
 dnl The package version as displayed by UI and used in filenames (no spaces, please).
-define([PACKAGE_VERSION], [2.7git])
+define([PACKAGE_VERSION], [2.7_git-I001])
 
 dnl The MSI product version in the form of n[.n[.n]] (numbers only).
 dnl The third field is 100*openvpn bugfix release + MSI build number.
@@ -50,7 +44,7 @@ dnl So for the 2nd MSI build for OpenVPN 2.6.3 use 2.6.302
 define([PRODUCT_VERSION], [2.7.0])
 
 dnl The MSI product code MUST change on each product release.
-define([PRODUCT_CODE], [{9122FCB2-2BB5-4115-8C0F-05D9B5EFE8D6}])
+define([PRODUCT_CODE], [{EAF6EB3D-A983-4ED7-9DDA-F80D5BDBD925}])
 
 dnl The MSI upgrade codes MUST persist for all versions of the same product line.
 dnl Please use own upgrade codes when deploying a non-official OpenVPN release.

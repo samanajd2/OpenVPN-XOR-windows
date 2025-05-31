@@ -76,16 +76,9 @@ prepare_package() {
         # capture groups.
         # The purpose is to ensure that "debian" in the version numbers are converted
         # into real distribution codenames (e.g. "jessie")
-        #
-        # Trying to manage versions like 2.3.14 and 2.4-rc2 with one regular
-        # expression gets very tricky, becomes hard to read easily and is
-        # fragile. Therefore we have two sed "profiles" depending on the version
-        # number type we're given.
-        #
-        # First sed is for openvpn-2.4-rc2-debian0-style and the second for openvpn-2.3.14-debian0-style entries
-        cat $changelog|\
-            sed -E s/"^(${pkg_name} \([[:digit:]]\.[[:digit:]])-([[:alnum:]]+)-debian([[:digit:]])"/"\1-\2-$OSRELEASE\3"/g|\
-            sed -E s/"^(${pkg_name} \([[:digit:]]\.[[:digit:]]\.[[:digit:]]+)-debian([[:digit:]])"/"\1-$OSRELEASE\2"/g > debian/changelog
+        cat $changelog | \
+            sed -E s/"^(${pkg_name} \([[:alnum:].-]+)-debian([[:digit:]])"/"\1-$OSRELEASE\2"/g \
+                > debian/changelog
 
         dpkg-buildpackage -d -S -uc -us
 
@@ -96,7 +89,7 @@ prepare_package() {
 
 prepare_package openvpn openvpn $OPENVPN_CURRENT_VERSION $DEBIAN_UPSTREAM_VERSION
 if $BUILD_ARCH_ALL; then
-    prepare_package openvpn-dco-dkms ovpn-dco $OPENVPN_DCO_CURRENT_VERSION $OPENVPN_DCO_CURRENT_VERSION
+    prepare_package ovpn-backports ovpn-backports $OPENVPN_DCO_CURRENT_VERSION $OPENVPN_DCO_CURRENT_VERSION
 fi
 
 cd $BASEDIR
