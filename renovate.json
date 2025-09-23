@@ -1,5 +1,6 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "baseBranchPatterns": [ "master", "release/2.6", "release/2.7" ],
     "packageRules": [
         {
             "matchDepNames": [
@@ -26,14 +27,15 @@
         },
         {
             "matchDatasources": [
-                "github-releases"
+                "github-tags"
             ],
             "matchPackageNames": [
                 "OpenVPN/ovpn-dco-win"
             ],
             "allowedVersions": "2.x",
             "matchBaseBranches": [
-                "master"
+                "master",
+                "release/2.7"
             ]
         },
         {

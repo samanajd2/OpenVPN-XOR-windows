@@ -22,25 +22,35 @@ jobs:
       SigningKeyStore: ${{ secrets.GOOGLE_CLOUD_KMS_KEYRING }}
       SigningStoreKeyName: ${{ secrets.GOOGLE_CLOUD_KMS_KEY }}
       SigningCertificateFile: ${{ github.workspace }}/certificate.pem
+      VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_cache,readwrite
 
     name: 'openvpn-build'
     runs-on: windows-latest
 
     steps:
       - name: Checkout openvpn-build
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           submodules: true
 
-      - name: Restore from cache and install vcpkg
+      - name: Restore vcpkg cache
+        id: vcpkg-restore
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: "${{ github.workspace }}/vcpkg_cache"
+          key: vcpkg-${{ matrix.arch }}-${{ hashFiles('**/src/openvpn/contrib/vcpkg-manifests/windows/vcpkg.json', '**/src/vcpkg/ports/openssl/vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ matrix.arch }}-
+
+      - name: Install vcpkg
         uses: lukka/run-vcpkg@5e0cab206a5ea620130caf672fce3e4a6b5666a1 # v11.5
         with:
           vcpkgDirectory: '${{ github.workspace }}/src/vcpkg'
           vcpkgJsonGlob: '**/src/openvpn/contrib/vcpkg-manifests/windows/vcpkg.json'
 
       - name: Get latest CMake and ninja
-        uses: lukka/get-cmake@ea004816823209b8d1211e47b216185caee12cc5 # v4.0.2
+        uses: lukka/get-cmake@2ecc21724e5215b0e567bc399a2602d2ecb48541 # v4.1.1
 
       - name: Install rst2html
         run: python -m pip install --upgrade pip docutils
@@ -49,7 +59,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
 
       - name: Set up Java
-        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         if: ${{ env.SigningKeyStore != '' }}
         with:
           java-version: 17
@@ -79,7 +89,7 @@ jobs:
 
       - name: Authenticate to Google Cloud
         id: 'auth'
-        uses: 'google-github-actions/auth@6fc4af4b145ae7821d527454aa9bd537d1f2dc5f' # v2
+        uses: 'google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093' # v3
         if: ${{ env.SigningKeyStore != '' }}
         with:
           create_credentials_file: false
@@ -117,8 +127,16 @@ jobs:
       - name: Archive artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: openvpn-master-${{ env.DATETIME }}-${{ env.OPENVPN_COMMIT }}-${{ matrix.arch }}
+          name: openvpn-msi-${{ env.DATETIME }}-${{ env.OPENVPN_COMMIT }}-${{ matrix.arch }}
           path: ${{ github.workspace }}\windows-msi\image\*-${{ matrix.arch }}.msi
+
+      - name: Save vcpkg cache
+        if: steps.vcpkg-restore.outputs.cache-hit != 'true'
+        id: vcpkg-save
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: "${{ github.workspace }}/vcpkg_cache"
+          key: ${{ steps.vcpkg-restore.outputs.cache-primary-key }}
 
   run_tclient_tests:
     name: Run t_client tests on AWS
@@ -130,12 +148,12 @@ jobs:
 
     steps:
       - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # v4.2.1
+        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # v5.0.0
         with:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Clone openvpn-windows-test repo
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           repository: openvpn/openvpn-windows-test
           ref: master
@@ -152,9 +170,9 @@ jobs:
           rm -fr msi
 
       - name: Get artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
-          pattern: "*-amd64"
+          pattern: "openvpn-msi-*-amd64"
           path: msi
 
       - name: Run AWS test
@@ -163,7 +181,7 @@ jobs:
         run: |
           Install-Module -Name AWS.Tools.Installer -Force
           Install-AWSToolsModule AWS.Tools.EC2 -Force
-          .\Start-AWSTest.ps1 -SSH_KEY ~/.ssh/id_rsa -MSI_PATH $(Get-ChildItem ../msi/*-amd64/*.msi | select -ExpandProperty FullName)
+          .\Start-AWSTest.ps1 -SSH_KEY ~/.ssh/id_rsa -MSI_PATH $(Get-ChildItem ../msi/*.msi | select -ExpandProperty FullName)
 
       - name: Archive openvpn logs
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -183,7 +201,7 @@ jobs:
         run: sudo apt install knockd
 
       - name: Get artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           path: msi
 
@@ -228,7 +246,7 @@ jobs:
 
     steps:
       - name: Checkout openvpn-build
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           submodules: true
@@ -255,9 +273,10 @@ jobs:
           # we do not push those tags
           git config --global user.name "gha_user"
           git config --global user.email "gha@openvpn.invalid"
+          export USE_LOCAL_SOURCE=1
+          echo USE_LOCAL_SOURCE=1 >> $GITHUB_ENV
           ./version-and-tags.sh
           ./create-release-files.sh
-          echo USE_LOCAL_SOURCE=1 >> $GITHUB_ENV
 
       # So that the caches expire after a while
       - name: Get Date for cache key
@@ -267,7 +286,7 @@ jobs:
 
       - name: Restore cached chroots
         id: chroots-restore
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: |
             debian-sbuild/chroots
@@ -290,7 +309,7 @@ jobs:
       - name: Save chroots
         if: steps.chroots-restore.outputs.cache-hit != 'true'
         id: chroots-save
-        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: |
             debian-sbuild/chroots
