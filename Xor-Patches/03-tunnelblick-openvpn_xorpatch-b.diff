@@ -1,6 +1,6 @@
-diff -u -r -x .DS_Store openvpn-2.6.15.old/src/openvpn/options.c openvpn-2.6.15.new/src/openvpn/options.c
---- openvpn-2.6.15.old/src/openvpn/options.c	2023-06-16 21:13:33.000000000 -0400
-+++ openvpn-2.6.15.new/src/openvpn/options.c	2023-06-16 21:13:33.000000000 -0400
+diff -u -r -x .DS_Store openvpn-2.6.16.old/src/openvpn/options.c openvpn-2.6.16.new/src/openvpn/options.c
+--- openvpn-2.6.16.old/src/openvpn/options.c	2025-11-23 21:13:33.000000000 -0400
++++ openvpn-2.6.16.new/src/openvpn/options.c	2025-11-23 21:13:33.000000000 -0400
 @@ -835,6 +835,9 @@
      o->resolve_retry_seconds = RESOLV_RETRY_INFINITE;
      o->resolve_in_advance = false;
