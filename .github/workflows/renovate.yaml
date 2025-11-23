@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Self-hosted Renovate
-        uses: renovatebot/github-action@9ba84f1ade243f8c2ce5b223df61cf23dc094584 # v43.0.13
+        uses: renovatebot/github-action@c5fdc9f98fdf9e9bb16b5760f7e560256eb79326 # v44.0.2
         with:
           configurationFile: .github/renovate-config.json
           token: ${{ secrets.RENOVATE_TOKEN }}
@@ -25,4 +25,5 @@ jobs:
           RENOVATE_IGNORE_PRESETS: >-
             local>openvpntechnologies/ops-sec-renovate,
             local>openvpntechnologies/ops-saas-renovate,
+            local>openvpntechnologies/ops-iaas-renovate,
             local>openvpntechnologies/core-team-renovate

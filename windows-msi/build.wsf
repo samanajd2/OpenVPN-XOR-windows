@@ -210,7 +210,8 @@ clean	Cleans intermediate and output files</example>
                     BuildPath(p.buildPath, "license.txt"), "utf-8", adCRLF,
                     [
                         BuildPath(depsPath, "openvpn", "COPYING"),
-                        BuildPath(depsPath, "openvpn", "COPYRIGHT.GPL")
+                        BuildPath(depsPath, "openvpn", "COPYRIGHT.GPL"),
+                        BuildPath("doc", "bundled-licenses.txt"),
                     ], "utf-8", adCRLF,
                     []));
                 b.pushRule(new ConvertTextBuildRule(
@@ -277,6 +278,7 @@ clean	Cleans intermediate and output files</example>
                         BuildPath(p.openVPNBinPath, "openvpn.exe"),
                         BuildPath(p.openVPNGuiBinPath, "openvpn-gui.exe"),
                         BuildPath(p.openVPNServPath, "openvpnserv.exe"),
+                        BuildPath(p.openVPNServPath, "openvpnservmsg.dll"),
                         BuildPath(p.openVPNTapCtlPath, "tapctl.exe"),
                         BuildPath("vcredist", p.wixPlat, "vcruntime140.dll"),
                         BuildPath(buildPath, "openvpnserv2.exe"),
