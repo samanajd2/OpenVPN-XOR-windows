@@ -1,6 +1,6 @@
-diff -u -r -x .DS_Store openvpn-2.6.17.old/src/openvpn/options.h openvpn-2.6.17.new/src/openvpn/options.h
---- openvpn-2.6.17.old/src/openvpn/options.h	2025-12-01 12:28:08.000000000 -0400
-+++ openvpn-2.6.17.new/src/openvpn/options.h	2025-12-01 12:28:08.000000000 -0400
+diff -u -r -x .DS_Store openvpn-2.7.3.old/src/openvpn/options.h openvpn-2.7.3.new/src/openvpn/options.h
+--- openvpn-2.7.3.old/src/openvpn/options.h	2026-04-28 12:28:08.000000000 -0400
++++ openvpn-2.7.3.new/src/openvpn/options.h	2026-04-28 12:28:08.000000000 -0400
 @@ -110,6 +110,9 @@
      int connect_retry_seconds;
      int connect_retry_seconds_max;
