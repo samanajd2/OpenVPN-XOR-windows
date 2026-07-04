@@ -25,18 +25,18 @@ jobs:
       VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_cache,readwrite
 
     name: 'openvpn-build'
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
       - name: Checkout openvpn-build
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           submodules: true
 
       - name: Restore vcpkg cache
         id: vcpkg-restore
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: "${{ github.workspace }}/vcpkg_cache"
           key: vcpkg-${{ matrix.arch }}-${{ hashFiles('**/src/openvpn/contrib/vcpkg-manifests/windows/vcpkg.json', '**/src/vcpkg/ports/openssl/vcpkg.json') }}
@@ -44,13 +44,13 @@ jobs:
             vcpkg-${{ matrix.arch }}-
 
       - name: Install vcpkg
-        uses: lukka/run-vcpkg@5e0cab206a5ea620130caf672fce3e4a6b5666a1 # v11.5
+        uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2 # v11.6
         with:
           vcpkgDirectory: '${{ github.workspace }}/src/vcpkg'
           vcpkgJsonGlob: '**/src/openvpn/contrib/vcpkg-manifests/windows/vcpkg.json'
 
       - name: Get latest CMake and ninja
-        uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f # v4.3.1
+        uses: lukka/get-cmake@f5b8fbb4d77cec1acc5a5f9f0df4beffaf5d98d9 # v4.3.4
 
       - name: Install rst2html
         run: python -m pip install --upgrade pip docutils
@@ -59,7 +59,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
 
       - name: Set up Java
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
         if: ${{ env.SigningKeyStore != '' }}
         with:
           java-version: 17
@@ -130,7 +130,7 @@ jobs:
       - name: Save vcpkg cache
         if: steps.vcpkg-restore.outputs.cache-hit != 'true'
         id: vcpkg-save
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: "${{ github.workspace }}/vcpkg_cache"
           key: ${{ steps.vcpkg-restore.outputs.cache-primary-key }}
@@ -145,12 +145,12 @@ jobs:
 
     steps:
       - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 # v6.1.0
+        uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b # v6.2.1
         with:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Clone openvpn-windows-test repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: openvpn/openvpn-windows-test
           ref: master
@@ -175,10 +175,13 @@ jobs:
       - name: Run AWS test
         working-directory: openvpn-windows-test
         shell: pwsh
+        env:
+          ConfigFile: ${{ secrets.T_CLIENT_INLINE_FILE }}
         run: |
           Install-Module -Name AWS.Tools.Installer -Force
           Install-AWSToolsModule AWS.Tools.EC2 -Force
-          .\Start-AWSTest.ps1 -SSH_KEY ~/.ssh/id_rsa -MSI_PATH $(Get-ChildItem ../msi/*.msi | select -ExpandProperty FullName)
+          Out-File -FilePath ./t_client.inline -InputObject $Env:ConfigFile
+          .\Start-AWSTest.ps1 -SSH_KEY ~/.ssh/id_rsa -MSI_PATH $(Get-ChildItem ../msi/*.msi | select -ExpandProperty FullName) -CONFIG_FILE ./t_client.inline
 
       - name: Archive openvpn logs
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -236,7 +239,7 @@ jobs:
 
     steps:
       - name: Checkout openvpn-build
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           submodules: true
@@ -276,7 +279,7 @@ jobs:
 
       - name: Restore cached chroots
         id: chroots-restore
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             debian-sbuild/chroots
@@ -299,7 +302,7 @@ jobs:
       - name: Save chroots
         if: steps.chroots-restore.outputs.cache-hit != 'true'
         id: chroots-save
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             debian-sbuild/chroots
