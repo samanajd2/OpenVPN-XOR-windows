@@ -12,7 +12,7 @@ define([PRODUCT_TAP_WIN_NAME],              [TAP-Windows])
 
 dnl ovpn-dco binaries
 dnl renovate: datasource=github-releases depName=OpenVPN/ovpn-dco-win
-define([PRODUCT_OVPN_DCO_VERSION],     [2.8.7])
+define([PRODUCT_OVPN_DCO_VERSION],     [2.8.13])
 
 dnl OpenVPNServ2.exe binary
 dnl renovate: datasource=github-releases depName=OpenVPN/openvpnserv2 versioning=loose
@@ -25,7 +25,7 @@ dnl The only binaries which Openvpn-build uses from Easy-RSA, are the *nix style
 dnl (32bit only) binaries for Windows, from easy-rsa/distro/windows/bin.
 dnl Further details: easy-rsa/distro/windows/Licensing/mksh-Win32.txt
 dnl renovate: datasource=github-releases depName=OpenVPN/easy-rsa
-define([EASYRSA_VERSION], [3.2.6])
+define([EASYRSA_VERSION], [3.2.7])
 
 dnl ============================================================
 dnl MSI Provisioning
